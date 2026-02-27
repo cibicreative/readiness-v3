@@ -163,6 +163,7 @@ export default function ToolsTab({ clientId, readOnly = false }: ToolsTabProps) 
       {showForm && (
         <ToolForm
           tool={editingTool}
+          clientId={clientId}
           onClose={() => {
             setShowForm(false);
             setEditingTool(undefined);

@@ -7,11 +7,12 @@ type Tool = Database['public']['Tables']['tools']['Row'];
 
 interface ToolFormProps {
   tool?: Tool;
+  clientId?: string;
   onClose: () => void;
   onSave: () => void;
 }
 
-export default function ToolForm({ tool, onClose, onSave }: ToolFormProps) {
+export default function ToolForm({ tool, clientId, onClose, onSave }: ToolFormProps) {
   const [formData, setFormData] = useState({
     name: tool?.name || '',
     type: tool?.type || '',
@@ -55,7 +56,7 @@ export default function ToolForm({ tool, onClose, onSave }: ToolFormProps) {
     } else {
       const { error } = await supabase
         .from('tools')
-        .insert([data]);
+        .insert([{ ...data, client_id: clientId || null }]);
 
       if (error) {
         console.error('Error creating tool:', error);
