@@ -30,7 +30,7 @@ export default function ProcessDetailModal({ process, onClose, onUpdate, readOnl
   const [steps, setSteps] = useState<ProcessStep[]>([]);
   const [linkedDataSources, setLinkedDataSources] = useState<DataSource[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [tools, setTools] = useState<Tool[]>([]);
+  const [_tools, setTools] = useState<Tool[]>([]);
   const [costSummary, setCostSummary] = useState<ProcessCostSummary | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showStepForm, setShowStepForm] = useState(false);
@@ -38,7 +38,7 @@ export default function ProcessDetailModal({ process, onClose, onUpdate, readOnl
   const [loading, setLoading] = useState(true);
   const [generatingKnowledge, setGeneratingKnowledge] = useState(false);
   const [knowledgeGenerated, setKnowledgeGenerated] = useState(false);
-  const [knowledgeDocId, setKnowledgeDocId] = useState<string | null>(null);
+  const [_knowledgeDocId, setKnowledgeDocId] = useState<string | null>(null);
 
   const loadProcessData = async () => {
     setLoading(true);
@@ -62,9 +62,9 @@ export default function ProcessDetailModal({ process, onClose, onUpdate, readOnl
         .select('*'),
     ]);
 
-    const stepsData = stepsRes.data || [];
-    const rolesData = rolesRes.data || [];
-    const toolsData = toolsRes.data || [];
+    const stepsData = (stepsRes.data || []) as ProcessStep[];
+    const rolesData = (rolesRes.data || []) as Role[];
+    const toolsData = (toolsRes.data || []) as Tool[];
 
     setSteps(stepsData);
     setLinkedDataSources(
@@ -87,15 +87,17 @@ export default function ProcessDetailModal({ process, onClose, onUpdate, readOnl
   }, [process.id]);
 
   const handleRecalculateScores = async () => {
-    const { data: trustProfiles } = await supabase
+    const { data: trustProfilesRaw } = await supabase
       .from('data_trust_profiles')
       .select('*')
       .in('data_source_id', linkedDataSources.map(ds => ds.id));
+    const trustProfiles = trustProfilesRaw as Database['public']['Tables']['data_trust_profiles']['Row'][] | null;
 
-    const { data: assessments } = await supabase
+    const { data: assessmentsRaw } = await supabase
       .from('literacy_assessments')
       .select('*')
       .in('person_id', await getRelevantPeopleIds());
+    const assessments = assessmentsRaw as Database['public']['Tables']['literacy_assessments']['Row'][] | null;
 
     const docScore = calculateDocumentationScore(process, steps, linkedDataSources);
     const autoScore = calculateAutomationPotentialScore(process, steps);

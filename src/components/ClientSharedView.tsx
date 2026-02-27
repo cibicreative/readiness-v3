@@ -38,11 +38,12 @@ export default function ClientSharedView({ token }: ClientSharedViewProps) {
     setLoading(true);
     setError(null);
 
-    const { data: clientData, error: clientError } = await supabase
+    const { data: clientDataRaw, error: clientError } = await supabase
       .from('clients')
       .select('*')
       .eq('share_token', token)
       .maybeSingle();
+    const clientData = clientDataRaw as Client | null;
 
     if (clientError || !clientData) {
       setError('This link is invalid or has expired.');
@@ -57,6 +58,8 @@ export default function ClientSharedView({ token }: ClientSharedViewProps) {
     }
 
     setClient(clientData);
+
+    type Process = Database['public']['Tables']['processes']['Row'];
 
     const [processesRes, peopleRes, dataSourcesRes, toolsRes] = await Promise.all([
       supabase
@@ -77,7 +80,7 @@ export default function ClientSharedView({ token }: ClientSharedViewProps) {
         .eq('client_id', clientData.id),
     ]);
 
-    const processes = processesRes.data || [];
+    const processes = (processesRes.data || []) as Process[];
     const avgDoc = processes.length > 0
       ? processes.reduce((sum, p) => sum + p.documentation_completeness_score, 0) / processes.length
       : 0;

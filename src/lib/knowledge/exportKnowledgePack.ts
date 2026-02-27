@@ -2,16 +2,6 @@ import JSZip from 'jszip';
 import { supabase } from '../supabase';
 import { toSlug } from './slug';
 
-interface KnowledgeDocument {
-  id: string;
-  doc_type: string;
-  title: string;
-  slug: string | null;
-  current_version_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 interface KnowledgeDocumentVersion {
   id: string;
   version_number: number;

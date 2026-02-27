@@ -43,7 +43,7 @@ export default function LiteracyAssessmentForm({
       .eq('person_id', personId)
       .order('assessment_date', { ascending: false });
 
-    setAssessments(data || []);
+    setAssessments((data || []) as LiteracyAssessment[]);
     setLoading(false);
   };
 

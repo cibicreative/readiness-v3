@@ -10,7 +10,7 @@ import { buildProcessKnowledgeMarkdown, type ProcessKnowledgeInput, type Process
 import { calculateExecutiveMetrics } from '../executiveScoring';
 import type { Database } from '../database.types';
 
-type Process = Database['public']['Tables']['processes']['Row'];
+type DBProcess = Database['public']['Tables']['processes']['Row'];
 type DBProcessStep = Database['public']['Tables']['process_steps']['Row'];
 type Role = Database['public']['Tables']['roles']['Row'];
 type Tool = Database['public']['Tables']['tools']['Row'];
@@ -34,23 +34,25 @@ export async function generateKnowledgeFromProcess(params: {
   const { clientId, processId } = params;
 
   // 1. Load process data
-  const { data: process, error: processError } = await supabase
+  const { data: processRaw, error: processError } = await supabase
     .from('processes')
     .select('*')
     .eq('id', processId)
     .eq('client_id', clientId)
     .single();
+  const process = processRaw as DBProcess | null;
 
   if (processError || !process) {
     throw new Error(`Failed to load process: ${processError?.message || 'Not found'}`);
   }
 
   // 2. Load process steps
-  const { data: steps, error: stepsError } = await supabase
+  const { data: stepsRaw, error: stepsError } = await supabase
     .from('process_steps')
     .select('*')
     .eq('process_id', processId)
     .order('step_order');
+  const steps = stepsRaw as DBProcessStep[] | null;
 
   if (stepsError) {
     throw new Error(`Failed to load process steps: ${stepsError.message}`);
@@ -59,18 +61,20 @@ export async function generateKnowledgeFromProcess(params: {
   const processSteps = steps || [];
 
   // 3. Load roles for step mapping
-  const { data: roles } = await supabase
+  const { data: rolesRaw } = await supabase
     .from('roles')
     .select('*')
     .eq('client_id', clientId);
+  const roles = rolesRaw as Role[] | null;
 
   const rolesMap = new Map<string, Role>();
   (roles || []).forEach(role => rolesMap.set(role.id, role));
 
   // 4. Load tools for step mapping
-  const { data: tools } = await supabase
+  const { data: toolsRaw } = await supabase
     .from('tools')
     .select('*');
+  const tools = toolsRaw as Tool[] | null;
 
   const toolsMap = new Map<string, Tool>();
   (tools || []).forEach(tool => toolsMap.set(tool.id, tool));

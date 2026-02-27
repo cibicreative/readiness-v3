@@ -4,7 +4,6 @@
  */
 
 import { sha256 } from './hash';
-import { toSlug } from './slug';
 import { buildProcessKnowledgeMarkdown, type ProcessKnowledgeInput } from './templates/processMarkdown';
 
 /**

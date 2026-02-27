@@ -8,11 +8,7 @@ import type { ProcessRoadmap as RoadmapType } from '../lib/roadmapGeneration';
 import type { Database } from '../lib/database.types';
 
 type Process = Database['public']['Tables']['processes']['Row'];
-type ProcessStep = Database['public']['Tables']['process_steps']['Row'];
 type Client = Database['public']['Tables']['clients']['Row'];
-type Role = Database['public']['Tables']['roles']['Row'];
-type Tool = Database['public']['Tables']['tools']['Row'];
-type DataSource = Database['public']['Tables']['data_sources']['Row'];
 
 export default function ProcessRoadmap({
   clientId,
@@ -36,56 +32,59 @@ export default function ProcessRoadmap({
     try {
       setLoading(true);
 
-      const { data: clientData } = await supabase
+      const { data: clientDataRaw } = await supabase
         .from('clients')
         .select('*')
         .eq('id', clientId)
         .maybeSingle();
+      const clientData = clientDataRaw as Client | null;
 
       setClient(clientData);
 
-      const { data: processData } = await supabase
+      const { data: processDataRaw } = await supabase
         .from('processes')
         .select('*')
         .eq('id', processId)
         .maybeSingle();
+      const processData = processDataRaw as Process | null;
 
       if (!processData) return;
       setProcess(processData);
 
-      const { data: steps } = await supabase
+      type ProcessStep = Database['public']['Tables']['process_steps']['Row'];
+      type Role = Database['public']['Tables']['roles']['Row'];
+      type Tool = Database['public']['Tables']['tools']['Row'];
+
+      const { data: stepsRaw } = await supabase
         .from('process_steps')
         .select('*')
         .eq('process_id', processId)
         .order('step_order');
+      const steps = stepsRaw as ProcessStep[] | null;
 
-      const { data: roles } = await supabase
+      const { data: rolesRaw } = await supabase
         .from('roles')
         .select('*')
         .eq('client_id', clientId);
+      const roles = rolesRaw as Role[] | null;
 
-      const { data: tools } = await supabase
+      const { data: toolsRaw } = await supabase
         .from('tools')
         .select('*')
         .eq('client_id', clientId);
+      const tools = toolsRaw as Tool[] | null;
 
-      const { data: dataSources } = await supabase
+      const { data: dataSourcesRaw } = await supabase
         .from('data_sources')
         .select('*')
         .eq('client_id', clientId);
+      const dataSources = dataSourcesRaw as { id: string }[] | null;
 
-      const { data: processTools } = await supabase
-        .from('process_tools')
-        .select('tool_id, step_id')
-        .eq('process_id', processId);
-
+      // process_tools is not in the DB schema; build step-tool map from process_steps instead
       const stepToolMap: Record<string, string[]> = {};
-      processTools?.forEach((pt) => {
-        if (pt.step_id) {
-          if (!stepToolMap[pt.step_id]) {
-            stepToolMap[pt.step_id] = [];
-          }
-          stepToolMap[pt.step_id].push(pt.tool_id);
+      (steps || []).forEach((step) => {
+        if (step.tool_id) {
+          stepToolMap[step.id] = [step.tool_id];
         }
       });
 
@@ -106,7 +105,7 @@ export default function ProcessRoadmap({
         ? roles.reduce((sum, role) => sum + (role.hourly_rate || 0), 0) / roles.length
         : 150;
 
-      const teamSize = clientData?.team_size || 5;
+      const teamSize = 5;
       const literacyScore = processData.literacy_fit_score || 0;
       const dataRiskScore = processData.data_risk_score || 0;
 

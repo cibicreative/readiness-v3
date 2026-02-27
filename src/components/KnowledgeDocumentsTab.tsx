@@ -42,8 +42,8 @@ export default function KnowledgeDocumentsTab({ clientId }: Props) {
           .order('name')
       ]);
 
-      setDocuments(docsResult.data || []);
-      setProcesses(processesResult.data || []);
+      setDocuments((docsResult.data || []) as KnowledgeDocument[]);
+      setProcesses((processesResult.data || []) as Process[]);
     } catch (error) {
       console.error('Error loading knowledge documents:', error);
     } finally {

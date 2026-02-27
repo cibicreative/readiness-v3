@@ -1,5 +1,7 @@
 export type Database = {
   public: {
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
     Tables: {
       clients: {
         Row: {
@@ -14,6 +16,8 @@ export type Database = {
           share_token: string | null;
           share_enabled: boolean;
           share_expires_at: string | null;
+          client_can_edit: boolean;
+          scope: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -29,6 +33,8 @@ export type Database = {
           share_token?: string | null;
           share_enabled?: boolean;
           share_expires_at?: string | null;
+          client_can_edit?: boolean;
+          scope?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -44,9 +50,12 @@ export type Database = {
           share_token?: string | null;
           share_enabled?: boolean;
           share_expires_at?: string | null;
+          client_can_edit?: boolean;
+          scope?: string | null;
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       processes: {
         Row: {
@@ -109,6 +118,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       process_steps: {
         Row: {
@@ -150,10 +160,12 @@ export type Database = {
           is_rule_based?: 'mostly_rules' | 'mixed' | 'mostly_judgment' | null;
           risk_notes?: string | null;
         };
+        Relationships: [];
       };
       tools: {
         Row: {
           id: string;
+          client_id: string | null;
           name: string;
           type: string | null;
           vendor: string | null;
@@ -166,6 +178,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
+          client_id?: string | null;
           name: string;
           type?: string | null;
           vendor?: string | null;
@@ -178,6 +191,7 @@ export type Database = {
         };
         Update: {
           id?: string;
+          client_id?: string | null;
           name?: string;
           type?: string | null;
           vendor?: string | null;
@@ -188,6 +202,7 @@ export type Database = {
           contract_notes?: string | null;
           monthly_cost?: number | null;
         };
+        Relationships: [];
       };
       roles: {
         Row: {
@@ -217,6 +232,7 @@ export type Database = {
           employment_type?: 'employee' | 'contractor' | null;
           department?: string | null;
         };
+        Relationships: [];
       };
       people: {
         Row: {
@@ -243,6 +259,7 @@ export type Database = {
           role_id?: string | null;
           hourly_rate_override?: number | null;
         };
+        Relationships: [];
       };
       literacy_assessments: {
         Row: {
@@ -272,6 +289,7 @@ export type Database = {
           self_confidence_level?: 'low' | 'medium' | 'high' | null;
           notes?: string | null;
         };
+        Relationships: [];
       };
       data_sources: {
         Row: {
@@ -307,6 +325,7 @@ export type Database = {
           is_source_of_truth?: boolean;
           description?: string | null;
         };
+        Relationships: [];
       };
       data_trust_profiles: {
         Row: {
@@ -339,6 +358,7 @@ export type Database = {
           overall_risk_score?: number;
           notes?: string | null;
         };
+        Relationships: [];
       };
       process_data_sources: {
         Row: {
@@ -356,6 +376,139 @@ export type Database = {
           process_id?: string;
           data_source_id?: string;
         };
+        Relationships: [];
+      };
+      knowledge_documents: {
+        Row: {
+          id: string;
+          client_id: string;
+          doc_type: 'process' | 'data_source' | 'tool' | 'gate_reference' | 'investment_memo_appendix' | 'overview';
+          title: string;
+          slug: string;
+          source_entity_type: string | null;
+          source_entity_id: string | null;
+          status: 'active' | 'archived' | 'draft';
+          owner_role_id: string | null;
+          risk_level: 'low' | 'medium' | 'high' | null;
+          investment_category: string | null;
+          bucket: 'do_now' | 'prepare' | 'defer' | 'avoid' | null;
+          tags: string[] | null;
+          metadata: Record<string, unknown> | null;
+          current_version_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          client_id: string;
+          doc_type: 'process' | 'data_source' | 'tool' | 'gate_reference' | 'investment_memo_appendix' | 'overview';
+          title: string;
+          slug: string;
+          source_entity_type?: string | null;
+          source_entity_id?: string | null;
+          status?: 'active' | 'archived' | 'draft';
+          owner_role_id?: string | null;
+          risk_level?: 'low' | 'medium' | 'high' | null;
+          investment_category?: string | null;
+          bucket?: 'do_now' | 'prepare' | 'defer' | 'avoid' | null;
+          tags?: string[] | null;
+          metadata?: Record<string, unknown> | null;
+          current_version_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          client_id?: string;
+          doc_type?: 'process' | 'data_source' | 'tool' | 'gate_reference' | 'investment_memo_appendix' | 'overview';
+          title?: string;
+          slug?: string;
+          source_entity_type?: string | null;
+          source_entity_id?: string | null;
+          status?: 'active' | 'archived' | 'draft';
+          owner_role_id?: string | null;
+          risk_level?: 'low' | 'medium' | 'high' | null;
+          investment_category?: string | null;
+          bucket?: 'do_now' | 'prepare' | 'defer' | 'avoid' | null;
+          tags?: string[] | null;
+          metadata?: Record<string, unknown> | null;
+          current_version_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      knowledge_document_versions: {
+        Row: {
+          id: string;
+          document_id: string;
+          version_number: number;
+          content_markdown: string;
+          content_hash: string;
+          generated_from: Record<string, unknown> | null;
+          generation_mode: 'generated' | 'edited' | 'imported';
+          created_by_user_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          document_id: string;
+          version_number: number;
+          content_markdown: string;
+          content_hash: string;
+          generated_from?: Record<string, unknown> | null;
+          generation_mode?: 'generated' | 'edited' | 'imported';
+          created_by_user_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          document_id?: string;
+          version_number?: number;
+          content_markdown?: string;
+          content_hash?: string;
+          generated_from?: Record<string, unknown> | null;
+          generation_mode?: 'generated' | 'edited' | 'imported';
+          created_by_user_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      knowledge_exports: {
+        Row: {
+          id: string;
+          client_id: string;
+          export_type: string;
+          filters: Record<string, unknown> | null;
+          status: 'queued' | 'running' | 'done' | 'failed';
+          result_url: string | null;
+          created_by_user_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          client_id: string;
+          export_type: string;
+          filters?: Record<string, unknown> | null;
+          status?: 'queued' | 'running' | 'done' | 'failed';
+          result_url?: string | null;
+          created_by_user_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          client_id?: string;
+          export_type?: string;
+          filters?: Record<string, unknown> | null;
+          status?: 'queued' | 'running' | 'done' | 'failed';
+          result_url?: string | null;
+          created_by_user_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
     };
   };

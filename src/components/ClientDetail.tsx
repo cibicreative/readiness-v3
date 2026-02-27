@@ -12,6 +12,7 @@ import ToolsTab from './ToolsTab';
 import KnowledgeDocumentsTab from './KnowledgeDocumentsTab';
 
 type Client = Database['public']['Tables']['clients']['Row'];
+type Process = Database['public']['Tables']['processes']['Row'];
 
 interface ClientDetailProps {
   clientId: string;
@@ -51,13 +52,14 @@ export default function ClientDetail({ clientId }: ClientDetailProps) {
         return;
       }
 
-      setClient(data);
+      setClient(data as Client);
 
-      const { data: processes } = await supabase
+      const { data: processesRaw } = await supabase
         .from('processes')
         .select('*')
         .eq('client_id', clientId)
         .order('automation_potential_score', { ascending: false });
+      const processes = processesRaw as Process[] | null;
 
       if (processes) {
         const avgDoc = processes.length > 0

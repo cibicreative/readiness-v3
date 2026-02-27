@@ -28,23 +28,26 @@ export default function InvestmentMemo({ clientId, processId }: { clientId: stri
     try {
       setLoading(true);
 
-      const { data: clientData } = await supabase
+      const { data: clientDataRaw } = await supabase
         .from('clients')
         .select('*')
         .eq('id', clientId)
         .maybeSingle();
+      const clientData = clientDataRaw as Client | null;
 
-      const { data: processData } = await supabase
+      const { data: processDataRaw } = await supabase
         .from('processes')
         .select('*')
         .eq('id', processId)
         .maybeSingle();
+      const processData = processDataRaw as Process | null;
 
-      const { data: steps } = await supabase
+      const { data: stepsRaw } = await supabase
         .from('process_steps')
         .select('*')
         .eq('process_id', processId)
         .order('step_order');
+      const steps = stepsRaw as ProcessStep[] | null;
 
       if (clientData && processData) {
         const metrics = calculateExecutiveMetrics(

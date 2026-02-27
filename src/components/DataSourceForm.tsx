@@ -98,7 +98,7 @@ export default function DataSourceForm({ clientId, dataSource, onClose, onSave }
         }
       }
     } else {
-      const { data: newDataSource, error: dsError } = await supabase
+      const { data: newDataSourceRaw, error: dsError } = await supabase
         .from('data_sources')
         .insert([{
           client_id: clientId,
@@ -106,6 +106,7 @@ export default function DataSourceForm({ clientId, dataSource, onClose, onSave }
         }])
         .select()
         .single();
+      const newDataSource = newDataSourceRaw as DataSource | null;
 
       if (dsError || !newDataSource) {
         console.error('Error creating data source:', dsError);

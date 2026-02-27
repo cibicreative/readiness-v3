@@ -40,7 +40,7 @@ export default function ProcessesTab({ clientId, readOnly = false }: ProcessesTa
       return;
     }
 
-    const processesData = data || [];
+    const processesData = (data || []) as Process[];
 
     const [stepsRes, rolesRes, toolsRes] = await Promise.all([
       supabase.from('process_steps').select('*').in('process_id', processesData.map(p => p.id)),
@@ -48,9 +48,9 @@ export default function ProcessesTab({ clientId, readOnly = false }: ProcessesTa
       supabase.from('tools').select('*'),
     ]);
 
-    const steps = stepsRes.data || [];
-    const roles = rolesRes.data || [];
-    const tools = toolsRes.data || [];
+    const steps = (stepsRes.data || []) as ProcessStep[];
+    const roles = (rolesRes.data || []) as Role[];
+    const tools = (toolsRes.data || []) as Tool[];
 
     const processesWithCost: ProcessWithCost[] = await Promise.all(
       processesData.map(async (process) => {

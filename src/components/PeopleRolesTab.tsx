@@ -36,9 +36,9 @@ export default function PeopleRolesTab({ clientId, readOnly = false }: PeopleRol
       supabase.from('literacy_assessments').select('*').order('assessment_date', { ascending: false }),
     ]);
 
-    setRoles(rolesRes.data || []);
-    setPeople(peopleRes.data || []);
-    setLiteracyAssessments(literacyRes.data || []);
+    setRoles((rolesRes.data || []) as Role[]);
+    setPeople((peopleRes.data || []) as Person[]);
+    setLiteracyAssessments((literacyRes.data || []) as LiteracyAssessment[]);
     setLoading(false);
   };
 

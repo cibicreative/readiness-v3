@@ -22,10 +22,11 @@ export default function ClientList() {
     try {
       setLoading(true);
       setError(null);
-      const { data: clientsData, error: fetchError } = await supabase
+      const { data: clientsDataRaw, error: fetchError } = await supabase
         .from('clients')
         .select('*')
         .order('name');
+      const clientsData = clientsDataRaw as Client[] | null;
 
       if (fetchError) {
         console.error('Error loading clients:', fetchError);

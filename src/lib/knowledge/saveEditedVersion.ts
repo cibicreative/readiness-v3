@@ -1,5 +1,8 @@
 import { supabase } from '../supabase';
 import { sha256 } from './hash';
+import type { Database } from '../database.types';
+
+type KnowledgeDocumentVersion = Database['public']['Tables']['knowledge_document_versions']['Row'];
 
 interface SaveEditedVersionParams {
   documentId: string;
@@ -52,7 +55,7 @@ export async function saveEditedKnowledgeVersion({
     ? { edited_from_version_id: editedFromVersionId }
     : (document.current_version_id ? { edited_from_version_id: document.current_version_id } : {});
 
-  const { data: newVersion, error: insertError } = await supabase
+  const { data: newVersionRaw, error: insertError } = await supabase
     .from('knowledge_document_versions')
     .insert({
       document_id: documentId,
@@ -64,6 +67,7 @@ export async function saveEditedKnowledgeVersion({
     })
     .select()
     .single();
+  const newVersion = newVersionRaw as KnowledgeDocumentVersion | null;
 
   if (insertError) {
     throw new Error(`Failed to create new version: ${insertError.message}`);

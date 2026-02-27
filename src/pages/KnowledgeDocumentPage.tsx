@@ -37,12 +37,13 @@ export default function KnowledgeDocumentPage({ clientId, documentId, onBack, al
       setLoading(true);
       setError(null);
 
-      const { data: doc, error: docError } = await supabase
+      const { data: docRaw, error: docError } = await supabase
         .from('knowledge_documents')
         .select('*')
         .eq('id', documentId)
         .eq('client_id', clientId)
         .maybeSingle();
+      const doc = docRaw as KnowledgeDocument | null;
 
       if (docError) {
         throw new Error(`Failed to load document: ${docError.message}`);
@@ -55,11 +56,12 @@ export default function KnowledgeDocumentPage({ clientId, documentId, onBack, al
       setDocument(doc);
 
       if (doc.current_version_id) {
-        const { data: versionData, error: versionError } = await supabase
+        const { data: versionDataRaw, error: versionError } = await supabase
           .from('knowledge_document_versions')
           .select('*')
           .eq('id', doc.current_version_id)
           .maybeSingle();
+        const versionData = versionDataRaw as KnowledgeDocumentVersion | null;
 
         if (versionError) {
           throw new Error(`Failed to load version: ${versionError.message}`);
@@ -117,7 +119,7 @@ export default function KnowledgeDocumentPage({ clientId, documentId, onBack, al
         }
       }
 
-      const result = await saveEditedKnowledgeVersion({
+      await saveEditedKnowledgeVersion({
         documentId: document.id,
         contentMarkdown: contentToSave,
         editedFromVersionId: version.id,

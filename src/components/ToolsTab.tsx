@@ -22,19 +22,20 @@ export default function ToolsTab({ clientId, readOnly = false }: ToolsTabProps) 
     const { data, error } = await supabase
       .from('tools')
       .select('*')
+      .eq('client_id', clientId)
       .order('name');
 
     if (error) {
       console.error('Error loading tools:', error);
     } else {
-      setTools(data || []);
+      setTools((data || []) as Tool[]);
     }
     setLoading(false);
   };
 
   useEffect(() => {
     loadTools();
-  }, []);
+  }, [clientId]);
 
   const getTotalMonthlyCost = () => {
     return tools.reduce((sum, tool) => {

@@ -233,15 +233,17 @@ export async function generateProcessDocument(
     throw new Error('Process or client not found');
   }
 
-  const process = processResult.data;
-  const steps = stepsResult.data || [];
-  const client = clientResult.data;
+  const process = processResult.data as Process;
+  const steps = (stepsResult.data || []) as ProcessStep[];
+  const client = clientResult.data as Client;
 
   // Fetch related tools
   const toolIds = steps.map(s => s.tool_id).filter(Boolean) as string[];
-  const { data: tools } = toolIds.length > 0
-    ? await supabase.from('tools').select('*').in('id', toolIds)
-    : { data: [] };
+  let tools: Tool[] = [];
+  if (toolIds.length > 0) {
+    const { data: toolsData } = await supabase.from('tools').select('*').in('id', toolIds);
+    tools = (toolsData || []) as Tool[];
+  }
 
   // Fetch related roles
   const roleIds = steps.map(s => s.role_id).filter(Boolean) as string[];
@@ -249,9 +251,11 @@ export async function generateProcessDocument(
   if (ownerRoleId) roleIds.push(ownerRoleId);
   const uniqueRoleIds = [...new Set(roleIds)];
 
-  const { data: roles } = uniqueRoleIds.length > 0
-    ? await supabase.from('roles').select('*').in('id', uniqueRoleIds)
-    : { data: [] };
+  let roles: Role[] = [];
+  if (uniqueRoleIds.length > 0) {
+    const { data: rolesData } = await supabase.from('roles').select('*').in('id', uniqueRoleIds);
+    roles = (rolesData || []) as Role[];
+  }
 
   // Fetch related data sources
   const { data: processDataSources } = await supabase
@@ -260,18 +264,20 @@ export async function generateProcessDocument(
     .eq('process_id', processId);
 
   const dataSourceIds = (processDataSources || []).map(pds => pds.data_source_id);
-  const { data: dataSources } = dataSourceIds.length > 0
-    ? await supabase.from('data_sources').select('*').in('id', dataSourceIds)
-    : { data: [] };
+  let dataSources: DataSource[] = [];
+  if (dataSourceIds.length > 0) {
+    const { data: dataSourcesData } = await supabase.from('data_sources').select('*').in('id', dataSourceIds);
+    dataSources = (dataSourcesData || []) as DataSource[];
+  }
 
   // Generate markdown
   const markdownContent = generateProcessMarkdown({
     process,
     steps,
     client,
-    tools: tools || [],
-    roles: roles || [],
-    dataSources: dataSources || []
+    tools,
+    roles,
+    dataSources
   });
 
   const contentHash = await calculateContentHash(markdownContent);
@@ -335,7 +341,7 @@ export async function generateProcessDocument(
     }
 
     // Create new document
-    const { data: newDoc, error } = await supabase
+    const { data: newDocRaw, error } = await supabase
       .from('knowledge_documents')
       .insert({
         client_id: clientId,
@@ -354,6 +360,7 @@ export async function generateProcessDocument(
       })
       .select()
       .single();
+    const newDoc = newDocRaw as { id: string } | null;
 
     if (error || !newDoc) {
       console.error('Database error creating knowledge document:', error);
@@ -364,7 +371,7 @@ export async function generateProcessDocument(
   }
 
   // Create new version
-  const { data: newVersion, error: versionError } = await supabase
+  const { data: newVersionRaw, error: versionError } = await supabase
     .from('knowledge_document_versions')
     .insert({
       document_id: documentId,
@@ -392,6 +399,7 @@ export async function generateProcessDocument(
     })
     .select()
     .single();
+  const newVersion = newVersionRaw as { id: string } | null;
 
   if (versionError || !newVersion) {
     console.error('Database error creating document version:', versionError);

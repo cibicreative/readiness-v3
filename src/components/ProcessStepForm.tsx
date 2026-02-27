@@ -39,8 +39,8 @@ export default function ProcessStepForm({ processId, clientId, step, nextOrder, 
         supabase.from('tools').select('*').order('name'),
       ]);
 
-      setRoles(rolesRes.data || []);
-      setTools(toolsRes.data || []);
+      setRoles((rolesRes.data || []) as Role[]);
+      setTools((toolsRes.data || []) as Tool[]);
     };
 
     loadOptions();

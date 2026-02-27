@@ -41,18 +41,20 @@ export default function ExecutiveCockpit({ clientId }: { clientId: string }) {
     try {
       setLoading(true);
 
-      const { data: clientData } = await supabase
+      const { data: clientDataRaw } = await supabase
         .from('clients')
         .select('*')
         .eq('id', clientId)
         .maybeSingle();
+      const clientData = clientDataRaw as Client | null;
 
       setClient(clientData);
 
-      const { data: processData } = await supabase
+      const { data: processDataRaw } = await supabase
         .from('processes')
         .select('*')
         .eq('client_id', clientId);
+      const processData = processDataRaw as Process[] | null;
 
       if (!processData) {
         setProcesses([]);
@@ -74,11 +76,12 @@ export default function ExecutiveCockpit({ clientId }: { clientId: string }) {
       );
 
       for (const process of processData) {
-        const { data: steps } = await supabase
+        const { data: stepsRaw } = await supabase
           .from('process_steps')
           .select('*')
           .eq('process_id', process.id)
           .order('step_order');
+        const steps = stepsRaw as ProcessStep[] | null;
 
         const metrics = calculateExecutiveMetrics(
           process,

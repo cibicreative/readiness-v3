@@ -28,11 +28,12 @@ export default function ClientShare({ token }: ClientShareProps) {
     setLoading(true);
     setError(null);
 
-    const { data: clientData, error: clientError } = await supabase
+    const { data: clientDataRaw, error: clientError } = await supabase
       .from('clients')
       .select('*')
       .eq('share_token', token)
       .maybeSingle();
+    const clientData = clientDataRaw as Client | null;
 
     if (clientError || !clientData) {
       setError('This link is invalid or has expired.');
@@ -61,15 +62,17 @@ export default function ClientShare({ token }: ClientShareProps) {
         .order('name'),
     ]);
 
-    setProcesses(processesRes.data || []);
+    setProcesses((processesRes.data || []) as Process[]);
 
+    const dataSourcesData = (dataSourcesRes.data || []) as DataSource[];
     const sourcesWithTrust = await Promise.all(
-      (dataSourcesRes.data || []).map(async (source) => {
-        const { data: trustData } = await supabase
+      dataSourcesData.map(async (source) => {
+        const { data: trustDataRaw } = await supabase
           .from('data_trust_profiles')
           .select('*')
           .eq('data_source_id', source.id)
           .maybeSingle();
+        const trustData = trustDataRaw as DataTrustProfile | null;
 
         return { ...source, trust: trustData || undefined };
       })

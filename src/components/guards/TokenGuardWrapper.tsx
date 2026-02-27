@@ -14,7 +14,7 @@ interface TokenGuardWrapperProps {
 export function TokenGuardWrapper({ token, children }: TokenGuardWrapperProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [client, setClient] = useState<Client | null>(null);
+  const [_client, setClient] = useState<Client | null>(null);
 
   useEffect(() => {
     async function validateToken() {
@@ -25,11 +25,12 @@ export function TokenGuardWrapper({ token, children }: TokenGuardWrapperProps) {
       }
 
       try {
-        const { data, error: fetchError } = await supabase
+        const { data: dataRaw, error: fetchError } = await supabase
           .from('clients')
           .select('*')
           .eq('share_token', token)
           .maybeSingle();
+        const data = dataRaw as Client | null;
 
         if (fetchError) throw fetchError;
 

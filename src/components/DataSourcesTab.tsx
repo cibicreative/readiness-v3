@@ -37,13 +37,15 @@ export default function DataSourcesTab({ clientId, readOnly = false }: DataSourc
       return;
     }
 
+    const sourcesData = (data || []) as DataSource[];
     const sourcesWithTrust = await Promise.all(
-      (data || []).map(async (source) => {
-        const { data: trustData } = await supabase
+      sourcesData.map(async (source) => {
+        const { data: trustDataRaw } = await supabase
           .from('data_trust_profiles')
           .select('*')
           .eq('data_source_id', source.id)
           .maybeSingle();
+        const trustData = trustDataRaw as DataTrustProfile | null;
 
         return {
           ...source,
